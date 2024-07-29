@@ -41,7 +41,7 @@ class UnhideSelectedOperator(bpy.types.Operator):
             for obj in context.selected_ids:
                 if obj:
                     if not hasattr(obj, 'hide_set'):
-                        return {'CANCELLED'}
+                        continue
                     if invert_hidden:
                         obj.hide_set(not obj.hide_get())
                     else:
