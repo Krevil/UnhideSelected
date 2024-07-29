@@ -36,35 +36,47 @@ class UnhideSelectedOperator(bpy.types.Operator):
         regions = [region for region in areas[0].regions if region.type == 'WINDOW']
         invert_hidden = bpy.context.preferences.addons[__name__].preferences.invert_hidden
         if scr ==-1 or areas[0] == -1 or regions[0] == -1:
-            return {'ERROR'}
+            return {'CANCELLED'}
         with context.temp_override(area=areas[0], region=regions[0], screen=scr):
             for obj in context.selected_ids:
-                if invert_hidden:
-                    if obj: obj.hide_set(not obj.hide_get())
-                else:
-                    if obj: obj.hide_set(False)
+                if obj:
+                    if not hasattr(obj, 'hide_set'):
+                        return {'CANCELLED'}
+                    if invert_hidden:
+                        obj.hide_set(not obj.hide_get())
+                    else:
+                        obj.hide_set(False)
         return {'FINISHED'}
+  
+addon_keymaps = []
+  
+def addbinding():
+    key_config = bpy.context.window_manager.keyconfigs.addon
+    if key_config:
+        km = key_config.keymaps.new(name='3D View', space_type='VIEW_3D')
+        kmi = km.keymap_items.new("unhideselected.unhide",
+                                            type='H',
+                                            value='PRESS',
+                                            shift=True,
+                                            alt=True,
+        )
+        addon_keymaps.append((km, kmi))
+
+def removebinding():
+    for km, kmi in addon_keymaps:
+        km.keymap_items.remove(kmi)
+    addon_keymaps.clear()
         
 
-
-key_config = bpy.context.window_manager.keyconfigs.addon
-if key_config:
-    key_map = key_config.keymaps.new(name='3D View', space_type='VIEW_3D')
-    key_entry = key_map.keymap_items.new("unhideselected.unhide",
-                                        type='H',
-                                        value='PRESS',
-                                        shift=True,
-                                        alt=True,
-    )
-    mode_keymap = (key_map, key_entry)
-    
 def register():
     bpy.utils.register_class(UnhideSelectedOperator)
     bpy.utils.register_class(UnhideSelectedPreferences)
+    addbinding()
 
 def unregister():
     bpy.utils.unregister_class(UnhideSelectedOperator)
     bpy.utils.unregister_class(UnhideSelectedPreferences)
+    removebinding()
 
 if __name__ == '__main__':
     register()
