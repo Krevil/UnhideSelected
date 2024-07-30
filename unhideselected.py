@@ -14,17 +14,19 @@ import bpy
 class UnhideSelectedPreferences(bpy.types.AddonPreferences):
     bl_idname = __name__
     
-    invert_hidden: bpy.props.BoolProperty(
-        name="Invert Hidden", 
-        description="Hide and unhide with the same keybind", 
-        default=False,
+    invert_visibility: bpy.props.BoolProperty(
+        name="Invert Visibility", 
+        description="Invert the visibility of objects when using the keybind", 
+        default=True,
         )
     
     def draw(self, context):
         layout = self.layout
         new_row = layout.row()
-        new_row.column().prop(self, "invert_hidden")
-        new_row.column().label(text="Hide and unhide with the same keybind")
+        new_row.column().prop(self, "invert_visibility")
+        long_column = new_row.column()
+        long_column.label(text="Invert the visibility of objects when using the keybind")
+        long_column.scale_x = 1.65
         
 class UnhideSelectedOperator(bpy.types.Operator):
     bl_idname = "unhideselected.unhide"
@@ -34,7 +36,7 @@ class UnhideSelectedOperator(bpy.types.Operator):
         scr = context.screen
         areas = [area for area in scr.areas if area.type == 'OUTLINER']
         regions = [region for region in areas[0].regions if region.type == 'WINDOW']
-        invert_hidden = bpy.context.preferences.addons[__name__].preferences.invert_hidden
+        invert_visibility = bpy.context.preferences.addons[__name__].preferences.invert_visibility
         if scr ==-1 or areas[0] == -1 or regions[0] == -1:
             return {'CANCELLED'}
         with context.temp_override(area=areas[0], region=regions[0], screen=scr):
@@ -42,7 +44,7 @@ class UnhideSelectedOperator(bpy.types.Operator):
                 if obj:
                     if not hasattr(obj, 'hide_set'):
                         continue
-                    if invert_hidden:
+                    if invert_visibility:
                         obj.hide_set(not obj.hide_get())
                     else:
                         obj.hide_set(False)
